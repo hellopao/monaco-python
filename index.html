@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monaco Python</title>
+  <style>
+    #app {
+      width: 80vw;
+      height: 80vh;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module">
+    import { setup, E_EDITOR_THEME } from '/src/index.ts'
+    setup(document.getElementById('app'), {
+      value: 'print("hello world!")',
+      theme: E_EDITOR_THEME.MONOKAI,
+      typesheds: {
+        'stubs/testtt/testtt.pyi': 'def test(words: str) -> str: ...',
+      },
+      snippets: {
+        testtt: {
+          prefix: "tt",
+          body: "testtt(${1:words})",
+          description: "testtt"
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

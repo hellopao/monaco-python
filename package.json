@@ -1,0 +1,39 @@
+{
+  "name": "monaco-python",
+  "version": "0.1.1",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "files": [
+    "dist/*"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/vscode": "^1.89.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0",
+    "vite-plugin-dts": "^4.0.2",
+    "vite-plugin-static-copy": "^1.0.5"
+  },
+  "dependencies": {
+    "@codingame/esbuild-import-meta-url-plugin": "^1.0.2",
+    "@codingame/monaco-vscode-keybindings-service-override": "~7.0.6",
+    "@codingame/monaco-vscode-python-default-extension": "~7.0.6",
+    "@codingame/monaco-vscode-theme-monokai-default-extension": "^8.0.1",
+    "@typefox/pyright-browser": "^1.1.299",
+    "fflate": "^0.8.2",
+    "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@~7.0.6",
+    "monaco-editor-wrapper": "~5.4.0",
+    "vscode": "npm:@codingame/monaco-vscode-api@~7.0.6",
+    "vscode-languageclient": "~9.0.1",
+    "vscode-languageserver-protocol": "^3.17.5"
+  },
+  "overrides": {
+    "monaco-editor": "$monaco-editor",
+    "vscode": "$vscode"
+  }
+}
