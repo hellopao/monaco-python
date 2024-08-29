@@ -11,27 +11,27 @@ npm i monaco-python
 
 ### basic usage
 ```javascript
-import { setup } from 'monaco-python';
+import start from 'monaco-python';
 
-await setup(document.getElementById('container'), {
+await start(document.getElementById('container'), {
 	value: 'print("hello world!")'
 });
 ```
 
 ### customize theme
 ```javascript
-import { setup, E_EDITOR_THEME } from 'monaco-python';
+import start, { E_EDITOR_THEME } from 'monaco-python';
 
-await setup(document.getElementById('container'), {
+await start(document.getElementById('container'), {
 	theme: E_EDITOR_THEME.MONOKAI,
 });
 ```
 
 ### customize typesheds
 ```javascript
-import { setup } from 'monaco-python';
+import start from 'monaco-python';
 
-await setup(document.getElementById('container'), {
+await start(document.getElementById('container'), {
 	typesheds: {
 		'stubs/testtt/testtt.pyi': 'def test(words: str) -> str: ...'
 	}
@@ -40,9 +40,9 @@ await setup(document.getElementById('container'), {
 
 ### customize typesheds
 ```javascript
-import { setup } from 'monaco-python';
+import start from 'monaco-python';
 
-await setup(document.getElementById('container'), {
+await start(document.getElementById('container'), {
 	snippets: {
 		testtt: {
 			prefix: "tt",
@@ -55,10 +55,10 @@ await setup(document.getElementById('container'), {
 
 ### vim mode
 ```javascript
-import { setup } from 'monaco-python';
+import start from 'monaco-python';
 import { initVimMode } from 'monaco-vim';
 
-const wrapper = await setup(document.getElementById('container'), {
+const wrapper = await start(document.getElementById('container'), {
 	value: 'print("hello world!")'
 });
 const editor = wrapper.getEditor();

@@ -1,12 +1,14 @@
 import "@codingame/monaco-vscode-python-default-extension";
 import { whenReady as whenMonokaiThemeReady } from "@codingame/monaco-vscode-theme-monokai-default-extension";
-import { MonacoEditorLanguageClientWrapper, type UserConfig, } from "monaco-editor-wrapper";
+import { MonacoEditorLanguageClientWrapper, type UserConfig } from "monaco-editor-wrapper";
 import { BrowserMessageReader, BrowserMessageWriter, } from "vscode-languageserver-protocol/browser.js";
 import { CloseAction, ErrorAction } from "vscode-languageclient";
 import * as vscode from "vscode";
 import * as monaco from 'monaco-editor';
 import * as fflate from 'fflate';
+import initFormatter, { format } from '@wasm-fmt/ruff_fmt';
 import builtinSnippets from './snippet.json';
+import { version as pkgVersion } from "../package.json";
 
 export enum E_EDITOR_THEME {
   MONOKAI = 'Monokai',
@@ -20,19 +22,22 @@ export enum E_EDITOR_THEME {
   LIGHT_VS = 'Light (Visual Studio)'
 }
 
+type Typesheds = Record<string, string>;
+
 interface IEditorCustomConfig {
   theme?: E_EDITOR_THEME;
-  typesheds?: Record<string, string>;
+  typesheds?: Typesheds;
   snippets?: EditorSnippets;
 }
 
 export type EditorOptions = monaco.editor.IStandaloneEditorConstructionOptions & IEditorCustomConfig;
 export type Editor = monaco.editor.IStandaloneCodeEditor;
+
 export type EditorSnippets = Record<string, { body: string | string[]; description: string | string[]; }>;
 
 const languageId = 'python';
 
-const getTypeDefinitions = async (url: string) => {
+const getBuiltinTypeDefinitions = async (url: string) => {
   const result: Record<string, string> = {};
   try {
     const res = await fetch(url);
@@ -49,17 +54,25 @@ const getTypeDefinitions = async (url: string) => {
   return result;
 }
 
+const formatTypeDefinitions = (builtinTypesheds: Typesheds, typesheds: Typesheds) => {
+  const builtinKey = 'stdlib/builtins.pyi';
+  if (typesheds[builtinKey]) {
+    builtinTypesheds[builtinKey] += `\n${typesheds[builtinKey]}`;
+  }
+  return { ...typesheds, ...builtinTypesheds };
+}
+
 const getPyrightWorkerUrl = async (url: string) => {
   const scriptText = await fetch(url).then(res => res.text());
   const blob = new Blob([scriptText], { type: 'application/javascript ' });
   return URL.createObjectURL(blob);
 }
 
-export async function setup(container: HTMLElement, options: EditorOptions = {}): Promise<MonacoEditorLanguageClientWrapper> {
+export async function setup(options: EditorOptions = {}): Promise<MonacoEditorLanguageClientWrapper> {
   const workspaceRoot = `/workspace`;
   const workspaceUri = vscode.Uri.parse(workspaceRoot);
 
-  const { value = '', readOnly = false, typesheds = {}, snippets = {}, ...rest } = options;
+  const { value = '', typesheds = {}, snippets = {}, ...rest } = options;
 
   const wrapperConfig: UserConfig["wrapperConfig"] = {
     editorAppConfig: {
@@ -71,14 +84,13 @@ export async function setup(container: HTMLElement, options: EditorOptions = {})
           text: value,
         },
       },
-      readOnly,
       editorOptions: rest,
       awaitExtensionReadiness: [whenMonokaiThemeReady],
       userConfiguration: {
         json: JSON.stringify({
           'workbench.colorTheme': options.theme || E_EDITOR_THEME.MONOKAI
         })
-      }
+      },
     },
     serviceConfig: {
       userServices: {
@@ -89,9 +101,10 @@ export async function setup(container: HTMLElement, options: EditorOptions = {})
   };
 
   try {
+    // @ts-ignore
     const baseURL = import.meta.env.BASE_URL;
     const homePage = baseURL === '/' ? window.location.href : baseURL;
-    const builtinTypesheds = await getTypeDefinitions(
+    const builtinTypesheds = await getBuiltinTypeDefinitions(
       new URL('typeshed.zip', homePage).href
     );
 
@@ -124,7 +137,7 @@ export async function setup(container: HTMLElement, options: EditorOptions = {})
           uri: workspaceUri,
         },
         initializationOptions: {
-          files: { ...builtinTypesheds, ...typesheds },
+          files: formatTypeDefinitions(builtinTypesheds, typesheds),
         },
         errorHandler: {
           error: () => ({ action: ErrorAction.Continue }),
@@ -146,7 +159,7 @@ export async function setup(container: HTMLElement, options: EditorOptions = {})
 
     const wrapper = new MonacoEditorLanguageClientWrapper();
 
-    await wrapper.initAndStart({ wrapperConfig, languageClientConfig, loggerConfig }, container)
+    await wrapper.init({ wrapperConfig, languageClientConfig, loggerConfig });
 
     monaco.languages.registerCompletionItemProvider(languageId, {
       // @ts-ignore
@@ -167,9 +180,34 @@ export async function setup(container: HTMLElement, options: EditorOptions = {})
       }
     });
 
-    return wrapper; 
+    await initFormatter();
+    monaco.languages.registerDocumentFormattingEditProvider(languageId, {
+      provideDocumentFormattingEdits(model, options) {
+        return [{
+          text: format(model.getValue(), "", {
+            indent_style: options.insertSpaces ? "space" : "tab",
+            indent_width: options.tabSize
+          }),
+          range: model.getFullModelRange()
+        }];
+      }
+    });
+
+    return wrapper;
   } catch (err) {
     console.log(`initialize monaco python editor failed`);
     throw err;
   }
 }
+
+export async function mount(wrapper: MonacoEditorLanguageClientWrapper, container: HTMLElement) {
+  await wrapper.start(container);
+}
+
+export default async function run(container: HTMLElement, options: EditorOptions = {}) {
+  const wrapper = await setup(options);
+  await mount(wrapper, container);
+  return wrapper;
+}
+
+export const version = pkgVersion;

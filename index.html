@@ -16,12 +16,13 @@
 <body>
   <div id="app"></div>
   <script type="module">
-    import { setup, E_EDITOR_THEME } from '/src/index.ts'
-    setup(document.getElementById('app'), {
-      value: 'print("hello world!")',
+    import start, { E_EDITOR_THEME } from '/src/index.ts'
+    start(document.getElementById('app'), {
+      value: '',
       theme: E_EDITOR_THEME.MONOKAI,
       typesheds: {
         'stubs/testtt/testtt.pyi': 'def test(words: str) -> str: ...',
+        'stdlib/builtins.pyi': 'def qqq(tt: str) -> str: ...'
       },
       snippets: {
         testtt: {
@@ -29,7 +30,9 @@
           body: "testtt(${1:words})",
           description: "testtt"
         }
-      }
+      },
+      insertSpaces: true,
+      tabSize: 2
     });
   </script>
 </body>

@@ -24,12 +24,13 @@ export default defineConfig(({ mode }) => {
 		plugins: [
 			copyOverPyrightWorker(),
 			dts({
-				include: "src/index.ts"
+				include: "src/index.ts",
+				copyDtsFiles: true,
 			}),
 			buildeAsset({
 				baseURL,
 				target: path.join(__dirname, 'dist'),
-				include: /\.(json|svg|wasm)$/
+				include: /\.(json|svg|wasm|html)$/
 			}),
 		],
 		optimizeDeps: {
@@ -38,12 +39,14 @@ export default defineConfig(({ mode }) => {
 					importMetaUrlPlugin,
 				]
 			},
+			exclude: ['@wasm-fmt/ruff_fmt']
 		},
 		build: {
 			lib: {
 				entry: path.resolve(__dirname, 'src/index.ts'),
 				name: 'monaco-python',
 				fileName: 'index',
+				formats: ['es'],
 			},
 		}
 	}
