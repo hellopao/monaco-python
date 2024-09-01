@@ -24,8 +24,7 @@ export default defineConfig(({ mode }) => {
 		plugins: [
 			copyOverPyrightWorker(),
 			dts({
-				include: "src/index.ts",
-				copyDtsFiles: true,
+				include: 'src/index.ts'
 			}),
 			buildeAsset({
 				baseURL,

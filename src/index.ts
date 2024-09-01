@@ -6,7 +6,8 @@ import { CloseAction, ErrorAction } from "vscode-languageclient";
 import * as vscode from "vscode";
 import * as monaco from 'monaco-editor';
 import * as fflate from 'fflate';
-import initFormatter, { format } from '@wasm-fmt/ruff_fmt';
+import initFormatter, { format as formatCode } from '@wasm-fmt/ruff_fmt';
+import { includeKeys } from "filter-obj";
 import builtinSnippets from './snippet.json';
 import { version as pkgVersion } from "../package.json";
 
@@ -184,9 +185,12 @@ export async function setup(options: EditorOptions = {}): Promise<MonacoEditorLa
     monaco.languages.registerDocumentFormattingEditProvider(languageId, {
       provideDocumentFormattingEdits(model, options) {
         return [{
-          text: format(model.getValue(), "", {
+          text: formatCode(model.getValue(), "", {
             indent_style: options.insertSpaces ? "space" : "tab",
-            indent_width: options.tabSize
+            indent_width: options.tabSize,
+            line_ending: "lf",
+            quote_style: "single",
+            magic_trailing_comma: "respect",
           }),
           range: model.getFullModelRange()
         }];
@@ -200,11 +204,18 @@ export async function setup(options: EditorOptions = {}): Promise<MonacoEditorLa
   }
 }
 
-export async function mount(wrapper: MonacoEditorLanguageClientWrapper, container: HTMLElement) {
+export async function mount(wrapper: MonacoEditorLanguageClientWrapper, container: HTMLElement): Promise<Editor> {
   await wrapper.start(container);
+  const editor = wrapper.getEditor()!;
+  const rawOptions = editor.getRawOptions();
+  // @ts-ignore
+  const indentOptions: monaco.editor.ITextModelUpdateOptions = includeKeys(rawOptions, ['tabSize', 'insertSpaces']);
+  editor.getModel()?.updateOptions(indentOptions);
+  // editor.getAction('editor.action.formatDocument')?.run();
+  return editor;
 }
 
-export default async function run(container: HTMLElement, options: EditorOptions = {}) {
+export default async function (container: HTMLElement, options: EditorOptions = {}) {
   const wrapper = await setup(options);
   await mount(wrapper, container);
   return wrapper;
