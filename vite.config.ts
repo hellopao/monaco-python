@@ -18,7 +18,7 @@ const copyOverPyrightWorker = () =>
 	});
 
 export default defineConfig(({ mode }) => {
-	const baseURL = mode === 'development' ? '/' : `https://unpkg.com/${pkg.name}@${pkg.version}/dist/`;
+	const baseURL = mode === 'development' ? '/' : `https://cdn.jsdelivr.net/npm/${pkg.name}@${pkg.version}/dist/`;
 	return {
 		base: baseURL,
 		plugins: [

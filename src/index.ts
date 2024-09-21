@@ -211,7 +211,6 @@ export async function mount(wrapper: MonacoEditorLanguageClientWrapper, containe
   // @ts-ignore
   const indentOptions: monaco.editor.ITextModelUpdateOptions = includeKeys(rawOptions, ['tabSize', 'insertSpaces']);
   editor.getModel()?.updateOptions(indentOptions);
-  // editor.getAction('editor.action.formatDocument')?.run();
   return editor;
 }
 
